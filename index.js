@@ -8,17 +8,22 @@ import path from 'path';
 import { access, constants } from 'fs/promises';
 import figures from 'figures';
 import chalk from "chalk";
+import fs from 'fs/promises';
 
 
 const URLS = {
-  COMMUNITY_PLUGINS:
-    "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
+  COMMUNITY_PLUGINS: "https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json",
+  GITHUB_RAWCONTENT: `https://raw.githubusercontent.com`
 };
 
 const repoBasePath = 'repositories';
 
+//TODO: add as command line params
+
 // number of parallel git jobs
 const batchSize = 10;
+// pull changes only if version if manifest has changed
+const getOnlyNewVersion = true;
 
 async function exists(path) {
   try {
@@ -79,6 +84,9 @@ async function processRepositories(repos) {
         // git pull
         (async () => {
           try {
+            if(!(await shouldCheckForUpdates(repo))){
+                return;
+            }
             const git = new simpleGit(localRepoPath);
             const { summary } = await git.pull();
             if (summary.changes || summary.deletions || summary.insertions) {
@@ -101,6 +109,10 @@ async function processRepositories(repos) {
           }
           catch (err) {
             failedRepos.push({ repo, err })
+            try{
+              await fs.rm(localRepoPath, {recursive: true, force: true});
+            }
+            catch{}
           }
           finally {
             progressBar.increment({ repo: repo });
@@ -114,6 +126,35 @@ async function processRepositories(repos) {
 
   return { newRepos, updatedRepos, failedRepos };
 }
+
+async function shouldCheckForUpdates(repo) {
+  if(!getOnlyNewVersion){
+    return true;
+  }
+  const branches = ['main', 'master'];
+  let branch;
+  while ((branch = branches.pop()) != undefined) {
+    try {
+      const localManifestPath = `${repoBasePath}/${repo}/manifest.json`;
+      if(!(await exists(localManifestPath))){
+        return true;
+      }
+      const localManifestData = await fs.readFile(localManifestPath)
+      const localManifest = JSON.parse(localManifestData);
+      let response = await fetch(`${URLS.GITHUB_RAWCONTENT}/${repo}/${branch}/manifest.json`);
+      let manifest = await response.json();
+      
+      return localManifest.version != manifest.version;
+    }
+    catch (err) {
+      continue;
+    }
+  }
+
+  throw Error('Failed to read manifest.')
+}
+
+
 
 /** Return list of plugin repositories on GitHub. */
 async function getPluginsRepos() {
@@ -169,3 +210,4 @@ getPluginsRepos()
     }
 
   });
+
