@@ -184,15 +184,19 @@ getPluginsRepos()
       return;
     }
 
+    const divider = '-----------';
+
     if (status.newRepos.length) {
-      console.log(`${chalk.yellow(figures.star)}  ${status.newRepos.length} new`)
+      console.log(`\n${chalk.yellow(figures.star)}  ${status.newRepos.length} new`)
+      console.log(divider);
       status.newRepos.forEach(x => {
         console.log(`   ${x.repo}`)
       })
     }
 
     if (status.updatedRepos.length) {
-      console.log(`${chalk.blue(figures.tick)}  ${status.updatedRepos.length} updated`)
+      console.log(`\n${chalk.blue(figures.tick)}  ${status.updatedRepos.length} updated`)
+      console.log(divider);
       const insertionsLabel = chalk.green('+');
       const deletionsLabel = chalk.red('-');
       const changesLabel = chalk.blue(figures.tick);
@@ -203,7 +207,8 @@ getPluginsRepos()
     }
 
     if (status.failedRepos.length) {
-      console.log(`${chalk.red(figures.warning)}  ${status.failedRepos.length} failed`)
+      console.log(`\n${chalk.red(figures.warning)}  ${status.failedRepos.length} failed`)
+      console.log(divider);
       status.failedRepos.forEach(x => {
         console.log(`   ${x.repo}: ${x.err.message}`)
       })
