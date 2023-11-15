@@ -1,11 +1,11 @@
 {
   "name": "obsidian-repository-downloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "📩 Download every obsidian.md repository on GitHub",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "npm ci && node index.js"
+    "start": "node index.js"
   },
   "author": "konhi <hello.konhi@gmail.com>",
   "license": "MIT",
@@ -16,6 +16,7 @@
     "gitly": "^2.1.5",
     "node-fetch": "^3.1.1",
     "ora": "^6.0.0",
-    "simple-git": "^3.20.0"
+    "simple-git": "^3.20.0",
+    "yargs": "^17.7.2"
   }
 }

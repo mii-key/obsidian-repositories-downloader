@@ -9,6 +9,7 @@ import { access, constants } from 'fs/promises';
 import figures from 'figures';
 import chalk from "chalk";
 import fs from 'fs/promises';
+import yargs from "yargs";
 
 
 const URLS = {
@@ -18,12 +19,12 @@ const URLS = {
 
 const repoBasePath = 'repositories';
 
-//TODO: add as command line params
-
-// number of parallel git jobs
-const batchSize = 10;
-// pull changes only if version if manifest has changed
-const getOnlyNewVersion = true;
+const options = {
+  // number of parallel git jobs
+  jobCount: 10,
+  // pull changes only if version if manifest has changed
+  getOnlyNewVersion: true
+}
 
 async function exists(path) {
   try {
@@ -72,7 +73,7 @@ async function processRepositories(repos) {
 
   while (repos.length) {
     let reposBatch = [];
-    for (let i = 0; i < batchSize && repos.length; i++) {
+    for (let i = 0; i < options.jobCount && repos.length; i++) {
       reposBatch.push(repos.pop());
     }
 
@@ -84,8 +85,8 @@ async function processRepositories(repos) {
         // git pull
         (async () => {
           try {
-            if(!(await shouldCheckForUpdates(repo))){
-                return;
+            if (!(await shouldCheckForUpdates(repo))) {
+              return;
             }
             const git = new simpleGit(localRepoPath);
             const { summary } = await git.pull();
@@ -109,10 +110,10 @@ async function processRepositories(repos) {
           }
           catch (err) {
             failedRepos.push({ repo, err })
-            try{
-              await fs.rm(localRepoPath, {recursive: true, force: true});
+            try {
+              await fs.rm(localRepoPath, { recursive: true, force: true });
             }
-            catch{}
+            catch { }
           }
           finally {
             progressBar.increment({ repo: repo });
@@ -128,7 +129,7 @@ async function processRepositories(repos) {
 }
 
 async function shouldCheckForUpdates(repo) {
-  if(!getOnlyNewVersion){
+  if (!options.getOnlyNewVersion) {
     return true;
   }
   const branches = ['main', 'master'];
@@ -136,14 +137,14 @@ async function shouldCheckForUpdates(repo) {
   while ((branch = branches.pop()) != undefined) {
     try {
       const localManifestPath = `${repoBasePath}/${repo}/manifest.json`;
-      if(!(await exists(localManifestPath))){
+      if (!(await exists(localManifestPath))) {
         return true;
       }
       const localManifestData = await fs.readFile(localManifestPath)
       const localManifest = JSON.parse(localManifestData);
       let response = await fetch(`${URLS.GITHUB_RAWCONTENT}/${repo}/${branch}/manifest.json`);
       let manifest = await response.json();
-      
+
       return localManifest.version != manifest.version;
     }
     catch (err) {
@@ -174,45 +175,69 @@ async function getPluginsRepos() {
   return pluginsRepos;
 }
 
-getPluginsRepos()
-  .then((repos) => {
-    return processRepositories(repos)
+function run() {
+  getPluginsRepos()
+    .then((repos) => {
+      return processRepositories(repos)
+    })
+    .then((status) => {
+      if (!status.newRepos.length && !status.updatedRepos.length && !status.failedRepos.length) {
+        console.log('Everything is up to date.');
+        return;
+      }
+
+      const divider = '-----------';
+
+      if (status.newRepos.length) {
+        console.log(`\n${chalk.yellow(figures.star)}  ${status.newRepos.length} new`)
+        console.log(divider);
+        status.newRepos.forEach(x => {
+          console.log(`   ${x.repo}`)
+        })
+      }
+
+      if (status.updatedRepos.length) {
+        console.log(`\n${chalk.blue(figures.tick)}  ${status.updatedRepos.length} updated`)
+        console.log(divider);
+        const insertionsLabel = chalk.green('+');
+        const deletionsLabel = chalk.red('-');
+        const changesLabel = chalk.blue(figures.tick);
+        status.updatedRepos.forEach(x => {
+          const { changes, deletions, insertions } = x.summary;
+          console.log(`   ${x.repo} [${changes}${changesLabel}, ${insertions}${insertionsLabel}, ${deletions}${deletionsLabel}]`);
+        })
+      }
+
+      if (status.failedRepos.length) {
+        console.log(`\n${chalk.red(figures.warning)}  ${status.failedRepos.length} failed`)
+        console.log(divider);
+        status.failedRepos.forEach(x => {
+          console.log(`   ${x.repo}: ${x.err.message}`)
+        })
+      }
+
+    });
+}
+
+const vargs = yargs(process.argv.slice(2))
+  .usage('Usage: $0 [options]')
+  .option('jobs', {
+    alias: 'j',
+    describe: 'number of parallel jobs',
+    default: 10,
+    type: 'number'
   })
-  .then((status) => {
-    if (!status.newRepos.length && !status.updatedRepos.length && !status.failedRepos.length) {
-      console.log('Everything is up to date.');
-      return;
-    }
+  .option('all-changes', {
+    alias: 'a',
+    describe: 'If true pull all changes; else changes are pulled only if plugin version changed',
+    default: false,
+    type: 'boolean'
+  })
+  .argv;
 
-    const divider = '-----------';
+console.log(vargs)
 
-    if (status.newRepos.length) {
-      console.log(`\n${chalk.yellow(figures.star)}  ${status.newRepos.length} new`)
-      console.log(divider);
-      status.newRepos.forEach(x => {
-        console.log(`   ${x.repo}`)
-      })
-    }
+options.jobCount = vargs.jobs;
+options.getOnlyNewVersion = vargs.onlyNewVersions;
 
-    if (status.updatedRepos.length) {
-      console.log(`\n${chalk.blue(figures.tick)}  ${status.updatedRepos.length} updated`)
-      console.log(divider);
-      const insertionsLabel = chalk.green('+');
-      const deletionsLabel = chalk.red('-');
-      const changesLabel = chalk.blue(figures.tick);
-      status.updatedRepos.forEach(x => {
-        const { changes, deletions, insertions } = x.summary;
-        console.log(`   ${x.repo} [${changes}${changesLabel}, ${insertions}${insertionsLabel}, ${deletions}${deletionsLabel}]`);
-      })
-    }
-
-    if (status.failedRepos.length) {
-      console.log(`\n${chalk.red(figures.warning)}  ${status.failedRepos.length} failed`)
-      console.log(divider);
-      status.failedRepos.forEach(x => {
-        console.log(`   ${x.repo}: ${x.err.message}`)
-      })
-    }
-
-  });
-
+// run();

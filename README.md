@@ -1,29 +1,56 @@
-<div align='center'>
-    <h1>📩 Obsidian Repositories Downloader</h1>
-  <img src="https://user-images.githubusercontent.com/61631665/132124154-58db4b3d-e19f-4f71-844c-5aefc0917b15.gif"/>
-  <p>Learn, analyze and inspire from every <a href="https://obsidian.md">obsidian.md</a> plugin! Downloads every available Obsidian plugin (<1GB).</p>
+# Obsidian Repositories Downloader
 
-<hr/>      
-<img src="https://user-images.githubusercontent.com/61631665/131258921-9960bad9-4b76-434e-9b30-cd9cf14cb683.png"/>
-🔎 This allows to easily search and analyze other plugins. It's especially useful as Obsidian API isn't yet documented and GitHub search doesn't work as expected.
+Learn, analyze and inspire from every [obsidian.md](https://obsidian.md) plugin!
 
-<hr/>  
+Explore and search in the source code of all officially published plugins:
 
-<img src="https://user-images.githubusercontent.com/61631665/131258790-2499b1d7-50fe-4b9a-abde-0f00d6d08b17.png"/>
-🌳 Generates a nice tree structure!
+![search](/doc/img/search.png)
 
-</div>
+It's especially useful as Obsidian API isn't yet documented and GitHub search doesn't work as expected.
 
-## 🔨 Other Tools
+# Features
+## Download source code of all officially published Obsidian plugins
+![run](/doc/img/run.gif)
+
+## Fast updates
+Repos are checked and downloaded in parallel. By default, to speed up updates, changes are downloaded only for plugins with changed version. 
+You can configure number of parallel jobs or update scope via [options](#options).
+
+## An update report
+After each run see what was added or updated:
+![update-report](/doc/img/update-report.png)
+
+## Nice tree structure
+![repo-structure](/doc/img/repo-structure.png)
+
+# Installation
+```bash
+git clone https://github.com/mii-key/obsidian-repositories-downloader.git
+cd obsidian-repositories-downloader
+npm install
+```
+
+Get help:
+```
+npm start -- --help
+```
+
+# Run
+```bash
+npm start [-- [options]]
+```
+### Options
+
+- `jobs|j` - number of parrallel jobs.
+- `all|a` - get all changes. By default for existing plugins changes are downloaded only if plugin version is changed.
+
+**Example**. Start 20 jobs and get all changes:
+```bash
+npm start -- -j 20 -a
+```
+
+# Other Tools
+- Original [obsidian-repositories-downloader](https://github.com/konhi/obsidian-repositories-downloader)
 - [Everything](https://www.voidtools.com/): advanced search
 - [obsidian-plugin-downloader](https://github.com/luckman212/obsidian-plugin-downloader): similiar tool written in Shell
 
-## 👾 Usage
-```bash
-git clone https://github.com/konhi/obsidian-repositories-downloader.git
-cd obsidian-repositories-downloader
-npm start
-```
-
-- Tested with `node v12.22.7`.
-- In case of any problems, you may try updating your nodejs version to newest. ([see this issue](https://github.com/konhi/obsidian-repositories-downloader/issues/2)). You may also try using [this shell tool](https://github.com/luckman212/obsidian-plugin-downloader).
