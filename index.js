@@ -235,9 +235,7 @@ const vargs = yargs(process.argv.slice(2))
   })
   .argv;
 
-console.log(vargs)
-
 options.jobCount = vargs.jobs;
 options.getOnlyNewVersion = vargs.onlyNewVersions;
 
-// run();
+run();
