@@ -18,6 +18,7 @@ You can configure number of parallel jobs or update scope via [options](#options
 
 ## An update report
 After each run see what was added or updated:
+
 ![update-report](/doc/img/update-report.png)
 
 ## Nice tree structure
