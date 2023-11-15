@@ -43,7 +43,7 @@ npm start [-- [options]]
 ### Options
 
 - `jobs|j` - number of parrallel jobs.
-- `all|a` - get all changes. By default for existing plugins changes are downloaded only if plugin version is changed.
+- `all|a` - get all changes. By default changes are downloaded only if plugin version is changed.
 
 **Example**. Start 20 jobs and get all changes:
 ```bash
