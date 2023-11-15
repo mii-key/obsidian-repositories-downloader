@@ -13,7 +13,10 @@ It's especially useful as Obsidian API isn't yet documented and GitHub search do
 ![run](/doc/img/run.gif)
 
 ## Fast updates
-Repos are checked and downloaded in parallel. By default, to speed up updates, changes are downloaded only for plugins with changed version. 
+To speed up updates:
+- Repos are checked and downloaded in parallel. 
+- By default changes are downloaded only for plugins with changed version. 
+
 You can configure number of parallel jobs or update scope via [options](#options).
 
 ## An update report
