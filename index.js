@@ -10,6 +10,8 @@ import figures from 'figures';
 import chalk from "chalk";
 import fs from 'fs/promises';
 import yargs from "yargs";
+import readlineSync from 'readline-sync';
+import { rimraf } from 'rimraf';
 
 
 const URLS = {
@@ -110,10 +112,6 @@ async function processRepositories(repos) {
           }
           catch (err) {
             failedRepos.push({ repo, err })
-            try {
-              await fs.rm(localRepoPath, { recursive: true, force: true });
-            }
-            catch { }
           }
           finally {
             progressBar.increment({ repo: repo });
@@ -214,8 +212,21 @@ function run() {
         status.failedRepos.forEach(x => {
           console.log(`   ${x.repo}: ${x.err.message}`)
         })
-      }
 
+        const deleteResponse = readlineSync.question('Delete failed repos? [Y/n]');
+
+        if (deleteResponse === '' || deleteResponse === 'Y') {
+          status.failedRepos.forEach(async x => {
+            try {
+              const localRepoPath = path.join(repoBasePath, x.repo);
+              rimraf.sync(localRepoPath);
+            }
+            catch (err) {
+              console.log(err)
+            }
+          })
+        }
+      }
     });
 }
 
