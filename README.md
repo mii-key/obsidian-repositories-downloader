@@ -1,5 +1,9 @@
 # Obsidian Repositories Downloader
 
+> [!WARNING]  
+> Not compatible with the original [obsidian-repositories-downloader](https://github.com/konhi/obsidian-repositories-downloader).
+> You must delete `repositories` folder.
+
 Learn, analyze and inspire from every [obsidian.md](https://obsidian.md) plugin!
 
 Explore and search in the source code of all officially published plugins:
@@ -28,6 +32,7 @@ After each run see what was added or updated:
 ![repo-structure](/doc/img/repo-structure.png)
 
 # Installation
+
 ```bash
 git clone https://github.com/mii-key/obsidian-repositories-downloader.git
 cd obsidian-repositories-downloader
